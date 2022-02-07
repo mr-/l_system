@@ -19,7 +19,9 @@ import Numeric.LinearAlgebra hiding (scale)
 import qualified Numeric.Noise.Perlin as P
 import Prelude hiding ((<>))
 
-data Particle = P {pCoords :: Vector Double, pColor :: AlphaColour Double, pSize :: Double} deriving (Show)
+type Color = (Double, Double, Double, Double)
+
+data Particle = P {pCoords :: Vector Double, pColor :: Color, pSize :: Double} deriving (Show)
 
 rot :: Double -> Matrix Double
 rot phi = matrix 2 [cos phi, - sin phi, sin phi, cos phi]
@@ -42,17 +44,17 @@ moveParticle field particle =
 moveParticles :: Matrix Double -> [Particle] -> [Particle]
 moveParticles field = map (moveParticle field)
 
-englishVermillion' :: Double -> AlphaColour Double
-englishVermillion' = withOpacity (sRGB24 123 123 10)
+teaGreen' :: Color
+teaGreen' = (81, 0.25, 0.94, 0.3)
 
-teaGreen' :: Double -> AlphaColour Double
-teaGreen' = withOpacity (sRGB24 23 23 110)
+vividTangerine' :: Color
+vividTangerine' = (11, 0.40, 0.92, 0.3)
 
-vividTangerine' :: Double -> AlphaColour Double
-vividTangerine' = withOpacity (sRGB24 23 123 110)
+englishVermillion' :: Color
+englishVermillion' = (355, 0.68, 0.84, 0.3)
 
-darkGunmetal' :: Double -> AlphaColour Double
-darkGunmetal' = withOpacity (sRGB24 123 123 110)
+darkGunmetal' :: Color
+darkGunmetal' = (170, 0.30, 0.16, 0.4)
 
 initParticle :: Generate Particle
 initParticle = do
@@ -62,12 +64,12 @@ initParticle = do
   let coords = vector [x, y]
   color <-
     uniform
-      [ teaGreen' 0.9,
-        vividTangerine' 0.9,
-        englishVermillion' 0.9,
-        darkGunmetal' 0.9
+      [ teaGreen',
+        vividTangerine',
+        englishVermillion',
+        darkGunmetal'
       ]
-  return $ P {pCoords = coords, pSize = 1.3, pColor = color}
+  return $ P {pCoords = coords, pSize = 1, pColor = color}
 
 initParticles :: Generate [Particle]
 initParticles = mapM (const initParticle) [0 .. 800]
@@ -77,16 +79,15 @@ particles = do
   initial <- initParticles
   let flow = squeeze 2 <> rot 10
       iterations = iterate (moveParticles flow) initial
-  return $ concat $ take 2000 iterations
+  return $ concat $ take 600 iterations
 
 drawParticle :: Particle -> Generate ()
 drawParticle particle = do
   (width, height) <- getSize
   let [mx, my] = toList $ pCoords particle
       (x, y) = (tra width (-1, 1) mx, tra height (-1, 1) my)
-      c = pColor particle
-      a = alphaChannel c
-  cairo $ setSourceRGBA 1 1 0 0.2
+      (r, g, b, a) = pColor particle
+  cairo $ setSourceRGBA r g b a
   cairo $ arc x y (pSize particle) 0 (2 * pi)
   cairo fill
 
