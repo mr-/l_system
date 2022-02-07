@@ -67,17 +67,17 @@ initParticle = do
         englishVermillion' 0.9,
         darkGunmetal' 0.9
       ]
-  return $ P {pCoords = coords, pSize = 1, pColor = color}
+  return $ P {pCoords = coords, pSize = 1.3, pColor = color}
 
 initParticles :: Generate [Particle]
-initParticles = mapM (const initParticle) [0 .. 1500]
+initParticles = mapM (const initParticle) [0 .. 800]
 
 particles :: Generate [Particle]
 particles = do
   initial <- initParticles
-  let flow = squeeze 5 <> rot 30
+  let flow = squeeze 2 <> rot 10
       iterations = iterate (moveParticles flow) initial
-  return $ concat $ take 3000 iterations
+  return $ concat $ take 2000 iterations
 
 drawParticle :: Particle -> Generate ()
 drawParticle particle = do
